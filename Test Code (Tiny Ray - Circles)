@@ -1,0 +1,107 @@
+/*---------------------------------------------------------------------
+*
+* Copyright © 2015  Minsi Chen
+* E-mail: m.chen@derby.ac.uk
+*
+* The source is written for the Graphics I and II modules. You are free
+* to use and extend the functionality. The code provided here is functional
+* however the author does not guarantee its performance.
+---------------------------------------------------------------------*/
+#include <math.h>
+#include "Sphere.h"
+
+Sphere::Sphere()
+{
+	//the default sphere is centred around the origin of the world coordinate
+	//default radius is 2.0
+
+	m_centre.SetZero();
+	m_radius = 2.0;
+	m_primtype = PRIMTYPE_Sphere;
+}
+
+Sphere::Sphere(double x, double y, double z, double r)
+{
+	m_centre.SetVector(x, y, z);
+	m_radius = r;
+	m_primtype = PRIMTYPE_Sphere;
+}
+
+Sphere::~Sphere()
+{
+}
+
+RayHitResult Sphere::IntersectByRay(Ray& ray)
+{
+	RayHitResult result = Ray::s_defaultHitResult;
+
+	double t = FARFAR_AWAY;
+	Vector4D normal;
+	Vector4D intersection_point;
+
+	Vector4D s = ray.GetRayStart();
+	Vector4D v = ray.GetRay();
+
+	float cx = m_centre[0];
+	float cy = m_centre[1];
+	float cz = m_centre[2];
+	float r = m_radius;
+
+	// The algebraic form of a sphere is  (x - cx)^2 + (y - cy)^2 + (z - cz)^2 = r^2 where
+	Vector4D sMinusC;
+	sMinusC[0] = s[0] - cx;
+	sMinusC[1] = s[1] - cy;
+	sMinusC[2] = s[2] - cz;
+
+	float vxSMC = (v[0] * sMinusC[0]) + (v[1] * sMinusC[1]) + (v[2] * sMinusC[2]);
+	float vxv = pow(v[0], 2) + pow(v[1], 2) + pow(v[2], 2);
+	float SMCxSMC = pow(sMinusC[0], 2) + pow(sMinusC[1], 2) + pow(sMinusC[2], 2);
+
+	float minusB = -vxSMC;
+	float bSquared = pow(vxSMC, 2);
+	float four = vxv;
+	float AC = SMCxSMC - pow(r, 2);
+	float twoA = vxv;
+
+	double Pt = (minusB + sqrt(bSquared - (four*AC)))/(twoA);
+	double Mt = (minusB - sqrt(bSquared - (four*AC))) / (twoA);
+
+	if (Pt > Mt)
+	{
+		t = Pt;
+	}
+	else
+	{
+		t = Mt;
+	}
+	//TODO: Calculate the intersection between the input ray and this sphere
+	// Store the parametric result in t
+	// The algebraic form of a sphere is  (x - cx)^2 + (y - cy)^2 + (z - cz)^2 = r^2 where
+	// (x,y,z) is a point on the sphere
+	// (cx, cy, cz) is the centre of the sphere.,i.e. m_centre
+	// r is the radius of the sphere
+	//
+	// Note, the solution to ray-sphere intersection is the root(s) of a quadratic equation
+	// therefore, there will be three scenarios
+	// 1. Two real roots, the ray intersects the sphere twice. In this case, we are only interested in the closest intersection
+	// 2. One real root, the ray tangentially intersects the sphere
+	// 3. No real root, no intersection
+	
+	
+	//Calculate the exact location of the intersection using the result of t
+	intersection_point = ray.GetRayStart() + ray.GetRay()*t;
+	
+	//TODO: Calculate normal
+	//Normals vary across the surface of a sphere
+	//You need to calculate the normal based on the location of the intersection
+
+	if (t>0.0 && t < FARFAR_AWAY)
+	{
+		result.t = t;
+		result.data = this;
+		result.point = intersection_point;
+		result.normal = normal;
+	}
+
+	return result;
+}
